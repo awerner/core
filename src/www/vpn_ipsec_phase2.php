@@ -238,6 +238,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     $input_errors[] = gettext('A valid local network IPv6 address must be specified or you need to change Mode to IPv4');
                 }
                 break;
+            case 'virtualip':
+                break;
             default:
                 if ($pconfig['mode'] == 'tunnel' && !is_subnetv4(find_interface_network(get_real_interface($pconfig['localid_type'])))) {
                     $input_errors[] = sprintf(
@@ -545,6 +547,7 @@ if (isset($input_errors) && count($input_errors) > 0) {
                         </option>
 <?php
                       endforeach;?>
+                      <option value="virtualip" <?=$pconfig['localid_type'] == "virtualip" ? "selected=\"selected\"" : ""?> ><?=gettext("Virtual IP"); ?></option>
                     </select>
                   </td>
                 </tr>
