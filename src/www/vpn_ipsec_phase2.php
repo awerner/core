@@ -231,11 +231,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 }
             case "address":
                 if (!$pconfig['localid_address'] || !is_ipaddr($pconfig['localid_address'])) {
-                    $input_errors[] = gettext("A valid local network IP address must be specified.");
-                } elseif (is_ipaddrv4($pconfig['localid_address']) && ($pconfig['mode'] != "tunnel"))
-                $input_errors[] = gettext("A valid local network IPv4 address must be specified or you need to change Mode to IPv6");
-                elseif (is_ipaddrv6($pconfig['localid_address']) && ($pconfig['mode'] != "tunnel6"))
-                $input_errors[] = gettext("A valid local network IPv6 address must be specified or you need to change Mode to IPv4");
+                    $input_errors[] = gettext('A valid local network IP address must be specified.');
+                } elseif (is_ipaddrv4($pconfig['localid_address']) && ($pconfig['mode'] != 'tunnel')) {
+                    $input_errors[] = gettext('A valid local network IPv4 address must be specified or you need to change Mode to IPv6');
+                } elseif (is_ipaddrv6($pconfig['localid_address']) && ($pconfig['mode'] != 'tunnel6')) {
+                    $input_errors[] = gettext('A valid local network IPv6 address must be specified or you need to change Mode to IPv4');
+                }
+                break;
+            case 'virtualip':
+                break;
+            default:
+                if ($pconfig['mode'] == 'tunnel' && !is_subnetv4(find_interface_network(get_real_interface($pconfig['localid_type'])))) {
+                    $input_errors[] = sprintf(
+                        gettext('Invalid local network: %s has no valid IPv4 network.'),
+                        convert_friendly_interface_to_friendly_descr($pconfig['localid_type'])
+                    );
+                } elseif ($pconfig['mode'] == 'tunnel6' && !is_subnetv6(find_interface_networkv6(get_real_interface($pconfig['localid_type']), 'inet6'))) {
+                    $input_errors[] = sprintf(
+                        gettext('Invalid local network: %s has no valid IPv6 network.'),
+                        convert_friendly_interface_to_friendly_descr($pconfig['localid_type'])
+                    );
+                }
                 break;
         }
         /* Check if the localid_type is an interface, to confirm if it has a valid subnet. */
@@ -541,6 +557,7 @@ if (isset($input_errors) && count($input_errors) > 0) {
                         </option>
 <?php
                       endforeach;?>
+                      <option value="virtualip" <?=$pconfig['localid_type'] == "virtualip" ? "selected=\"selected\"" : ""?> ><?=gettext("Virtual IP"); ?></option>
                     </select>
                   </td>
                 </tr>

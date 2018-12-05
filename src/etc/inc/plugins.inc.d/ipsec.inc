@@ -66,6 +66,7 @@ $p1_authentication_methods = array(
     'hybrid_rsa_server' => array( 'name' => 'Hybrid RSA + Xauth', 'mobile' => true ),
     'xauth_rsa_server' => array( 'name' => 'Mutual RSA + Xauth', 'mobile' => true ),
     'xauth_psk_server' => array( 'name' => 'Mutual PSK + Xauth', 'mobile' => true ),
+    'xauth_psk_client' => array( 'name' => 'Mutual PSK + Xauth client', 'mobile' => false ),
     'eap-tls' => array( 'name' => 'EAP-TLS', 'mobile' => true),
     'psk_eap-tls' => array( 'name' => 'RSA (local) + EAP-TLS (remote)', 'mobile' => true),
     'eap-mschapv2' => array( 'name' => 'EAP-MSCHAPV2', 'mobile' => true),
@@ -810,7 +811,7 @@ function ipsec_configure_do($verbose = false, $interface = '')
                 continue;
             }
 
-            if ($ph1ent['mode'] == "aggressive" && in_array($ph1ent['authentication_method'], array("pre_shared_key", "xauth_psk_server"))) {
+            if ($ph1ent['mode'] == "aggressive" && in_array($ph1ent['authentication_method'], array("pre_shared_key", "xauth_psk_server", "xauth_psk_client"))) {
                 $aggressive_psk = true;
             }
             $ep = ipsec_get_phase1_src($ph1ent);
@@ -1262,6 +1263,10 @@ EOD;
                         $authentication = "leftauth = psk\n\trightauth = psk";
                         $authentication .= "\n\trightauth2 = xauth-generic";
                         break;
+                    case 'xauth_psk_client':
+                        $authentication = "leftauth = psk\n\trightauth = psk";
+                        $authentication .= "\n\tleftauth2 = xauth-generic";
+                        break;
                     case 'pre_shared_key':
                         $authentication = "leftauth = psk\n\trightauth = psk";
                         break;
@@ -1329,10 +1334,7 @@ EOD;
                             if (($localid_type == "none" || $localid_type == "mobile")
                                 && isset($ph1ent['mobile']) && (ipsec_get_number_of_phase2($ph1ent['ikeid'])==1)) {
                                 $left_spec = '%any';
-                            } else {
-                                if ($localid_type != "address") {
-                                    $localid_type = "subnet";
-                                }
+                            } elseif ($ph2ent['localid']['type'] != "virtualip" ) {
                                 // Don't let an empty subnet into config, it can cause parse errors. Ticket #2201.
                                 if (!is_ipaddr($leftsubnet_data) && !is_subnet($leftsubnet_data) && ($leftsubnet_data != "0.0.0.0/0")) {
                                     log_error("Invalid IPsec Phase 2 \"{$ph2ent['descr']}\" - {$ph2ent['localid']['type']} has no subnet.");
@@ -1495,7 +1497,11 @@ EOD;
                             $tmpconf = str_replace('<<connectionId>>', sprintf('%s-%03d', $ph1ent['ikeid'], $idx), $connEntry);
                         }
                         $tmpconf .= "\trightsubnet = " . $rightsubnet_spec[$idx]. "\n";
-                        $tmpconf .= "\tleftsubnet = " . $leftsubnet_spec[$idx] . "\n";
+                        if ($ph2ent['localid']['type'] == "virtualip") {
+                            $tmpconf .= "\tleftsourceip = %config\n";
+                        } else {
+                            $tmpconf .= "\tleftsubnet = " . $leftsubnet_spec[$idx] . "\n";
+                        }
                         if (!empty($ealgoESPsp2arr[$idx])) {
                             $tmpconf .= "\tesp = " . join(',', $ealgoESPsp2arr[$idx]) . "!\n";
                         }

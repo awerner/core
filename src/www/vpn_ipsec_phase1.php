@@ -196,6 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             if ($pconfig['mobile']) {
                 break;
             }
+        case "xauth_psk_client":
         case "xauth_psk_server":
             $reqdfields = explode(" ", "pre-shared-key");
             $reqdfieldsn = array(gettext("Pre-Shared Key"));

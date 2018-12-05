@@ -155,6 +155,7 @@ include("head.inc");
                       <select name="type" class="selectpicker">
                         <option value="PSK" <?=empty($pconfig['type']) || $pconfig['type'] == 'PSK' ?  "selected=\"selected\"" : ""; ?>><?=gettext("PSK");?></option>
                         <option value="EAP" <?=$pconfig['type'] == "EAP" ?  "selected=\"selected\"" : ""; ?>><?=gettext("EAP");?></option>
+                        <option value="XAUTH" <?=$pconfig['type'] == "XAUTH" ?  "selected=\"selected\"" : ""; ?>><?=gettext("XAUTH");?></option>
                       </select>
                     </td>
                   </tr>
